@@ -1285,7 +1285,7 @@ addEventListener('paste',e=>{if(e.target.closest&&e.target.closest('textarea,inp
   x.fillStyle='#dba63f';for(let y=0;y<8;y++)for(let i=0;i<8;i++)if((m[(y%4)*4+(i%4)]+0.5)/16<(i+y+1)/15)x.fillRect(i,y,1,1);})();
 
 drawSample();buildTile();renderSaved();updateSaveUi();
-applyLook(LOOKS[0][1][0][1]);
+markBase('Defaults');rebuild();schedule();  // start on the same plain defaults that Reset gives
 H.cur=snap();H.undo.length=0;BASEOF.set(H.cur,[BASE,BASENAME]);syncUndoUi();
 })();
 </script>

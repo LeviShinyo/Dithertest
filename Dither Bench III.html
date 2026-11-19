@@ -1,5 +1,5 @@
 <!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
-<title>Dither Bench II</title>
+<title>Dither Bench III</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jacquard+12&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=JetBrains+Mono:wght@500&family=VT323&family=Space+Mono:wght@700&family=Courier+Prime:wght@700&family=Silkscreen&family=Press+Start+2P&family=UnifrakturCook:wght@700&family=Pirata+One&display=swap">
@@ -45,15 +45,6 @@ input[type=text]{width:100%}
 input[type=number]{width:58px;flex:none;font-family:var(--mono);font-size:.76rem;font-variant-numeric:tabular-nums;text-align:right;-moz-appearance:textfield}
 input[type=number]::-webkit-inner-spin-button{display:none}
 input[type=color]{width:34px;height:26px;flex:none;border:1px solid var(--line-2);border-radius:4px;padding:1px;background:var(--field);cursor:pointer}
-/* sliders: amber fill up to the value (--p is set from script), 24px-tall grab area, 16px thumb */
-input[type=range]{-webkit-appearance:none;appearance:none;flex:1;min-width:0;height:24px;background:transparent;cursor:pointer;margin:0;--p:0%}
-input[type=range]::-webkit-slider-runnable-track{height:3px;border-radius:2px;background:linear-gradient(90deg,var(--accent) var(--p),var(--line-2) var(--p))}
-input[type=range]::-moz-range-track{height:3px;border-radius:2px;background:var(--line-2)}
-input[type=range]::-moz-range-progress{height:3px;border-radius:2px;background:var(--accent)}
-input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;margin-top:-6.5px;border-radius:50%;background:var(--fg);border:2px solid var(--panel);box-shadow:0 0 0 1px var(--line-2)}
-input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--fg);border:2px solid var(--panel);box-shadow:0 0 0 1px var(--line-2)}
-input[type=range]:hover::-webkit-slider-thumb,input[type=range]:active::-webkit-slider-thumb{background:var(--accent)}
-input[type=range]:hover::-moz-range-thumb,input[type=range]:active::-moz-range-thumb{background:var(--accent)}
 
 /* drawers */
 details.sec{border-bottom:1px solid var(--line)}
@@ -65,9 +56,9 @@ details.sec>summary::before{content:"";width:6px;height:6px;border-right:1.5px s
 details.sec[open]>summary::before{transform:rotate(45deg)}
 details.sec>summary .sum{margin-left:auto;font-family:var(--mono);font-weight:400;font-size:.68rem;letter-spacing:0;text-transform:none;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:60%}
 .body{display:flex;flex-direction:column;gap:7px;padding:0 14px 14px}
-.r{display:grid;grid-template-columns:104px minmax(0,1fr);gap:4px 8px;align-items:center;min-height:28px;position:relative}
+.r{display:grid;grid-template-columns:116px minmax(0,1fr);gap:4px 8px;align-items:center;min-height:28px;position:relative}
 .k{color:var(--muted);font-size:.8rem;line-height:1.15}
-.kw{min-width:0;line-height:1.15}
+.kw{min-width:0;line-height:1.15;padding-left:9px}
 .kw .help{vertical-align:-3px;margin-left:5px}
 .r.mod .k{color:var(--fg)}
 /* changed-from-the-Look marker: an amber dot in the gutter; it is also the reset button for that row */
@@ -106,14 +97,38 @@ details.sec>summary .sum{margin-left:auto;font-family:var(--mono);font-weight:40
 .lnums{display:flex;justify-content:space-between;padding:0 6px}
 
 /* inks */
-.ink{display:grid;grid-template-columns:34px minmax(0,1fr) 58px 24px;gap:8px;align-items:center}
-.stepper{display:flex;align-items:stretch;flex:none;border:1px solid var(--line);border-radius:4px;background:var(--field);overflow:hidden}
-.stepper:focus-within{border-color:var(--line-2)}
-.stepper input[type=number]{border:0;border-radius:0;background:transparent;width:44px;text-align:center;padding:5px 0}
-.stp{flex:none;width:22px;border:0;padding:0;background:transparent;color:var(--muted);font:500 .95rem/1 var(--mono);cursor:pointer;touch-action:manipulation;user-select:none;-webkit-user-select:none}
+.ink{display:grid;grid-template-columns:34px minmax(0,1fr) 24px;gap:8px;align-items:center}
+.ink input[type=color]{height:36px;width:34px}
+.bar.nolabel{grid-template-columns:minmax(0,1fr) auto}
+.r.stack{grid-template-columns:minmax(0,1fr)}
+.r.stack>.kw{padding:2px 0 0 9px}
+.r.stack>.v{display:block}
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(60px,1fr));gap:6px}
+.tile{display:flex;flex-direction:column;padding:0;border:1px solid var(--line);border-radius:5px;background:var(--field);cursor:pointer;overflow:hidden;color:var(--muted);font:inherit}
+.tile canvas{display:block;width:100%;aspect-ratio:1;image-rendering:pixelated}
+.tile span{font-size:.66rem;line-height:1.15;padding:4px 3px 5px;text-align:center;min-height:2.6em;display:flex;align-items:center;justify-content:center}
+.tile:hover{border-color:var(--line-2);color:var(--fg)}
+.tile[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent);color:var(--accent)}
+/* bar sliders: label box | track with amber fill and number | − + */
+.r.barrow{grid-template-columns:minmax(0,1fr)}
+.r.barrow>.modb{top:18px}
+.bar{display:grid;grid-template-columns:116px minmax(0,1fr) auto;min-height:36px;border:1px solid var(--line);border-radius:5px;background:var(--field);overflow:hidden}
+.bar:hover{border-color:var(--line-2)}
+.bar>.kw{display:flex;flex-wrap:wrap;align-items:center;align-content:center;gap:2px 5px;padding:4px 8px;background:#1f201c;border-right:1px solid var(--line)}
+.bar>.kw .help{margin-left:0;vertical-align:0}
+.r.mod .bar>.kw{background:#262217}
+.track{position:relative;display:flex;align-items:center;justify-content:flex-end;cursor:ew-resize;touch-action:pan-y;outline:none;min-width:0;--p:0%}
+.track .fill{position:absolute;left:0;top:0;bottom:0;width:var(--p);background:linear-gradient(90deg,rgba(219,166,63,.06),rgba(219,166,63,.2));border-right:2px solid var(--accent);pointer-events:none}
+.track:hover .fill,.track.drag .fill{background:linear-gradient(90deg,rgba(219,166,63,.1),rgba(219,166,63,.3))}
+.track:focus-visible{box-shadow:inset 0 0 0 2px var(--accent)}
+.track input[type=number]{position:relative;width:56px;border:0;border-radius:3px;background:transparent;padding:4px 8px;text-align:right;color:var(--fg);pointer-events:none}
+.track.editing input[type=number]{pointer-events:auto;cursor:text}
+.track input[type=number]:focus{background:var(--field);outline:1px solid var(--line-2);outline-offset:-1px}
+.steps{display:flex}
+.stp{flex:none;width:28px;border:0;border-left:1px solid var(--line);padding:0;background:transparent;color:var(--muted);font:500 1rem/1 var(--mono);cursor:pointer;touch-action:manipulation;user-select:none;-webkit-user-select:none}
 .stp:hover{color:var(--accent);background:var(--raise)}
 .stp:active{background:var(--line)}
-@media (pointer:coarse){.stp{width:30px}}
+@media (pointer:coarse){.bar{min-height:42px}.stp{width:36px}}
 .x{width:24px;height:24px;border:1px solid var(--line);background:transparent;border-radius:4px;color:var(--muted);cursor:pointer;padding:0;line-height:1}
 .x:hover{color:var(--warn);border-color:var(--warn)}
 .swatches{display:flex;flex-wrap:wrap;gap:5px}
@@ -217,7 +232,7 @@ textarea{width:100%;min-height:60px;font-family:var(--mono);font-size:.7rem;resi
 
   <aside class="panel" aria-label="Controls">
     <div class="head">
-      <div class="brand"><canvas id="mark" width="8" height="8" aria-hidden="true"></canvas><h1>Dither Bench <span>II</span></h1></div>
+      <div class="brand"><canvas id="mark" width="8" height="8" aria-hidden="true"></canvas><h1>Dither Bench <span>III</span></h1></div>
       <div class="actions">
         <label class="btn">Open image<input type="file" id="fileIn" accept="image/*"></label>
         <button type="button" class="btn primary" id="saveTop">Save PNG</button>
@@ -1031,26 +1046,71 @@ function row(p,label,o={},keys){const r=el('div','r'),kw=el('div','kw'),l=el('la
     m.onclick=()=>resetKeys(keys,o);l.addEventListener('dblclick',e=>{if(r.classList.contains('mod')){e.preventDefault();resetKeys(keys,o);}});
     r.prepend(m);MODROWS.push({r,keys});}
   p.appendChild(r);return {r,l,v};}
-const paintRange=rg=>{const a=Number(rg.min),b=Number(rg.max);rg.style.setProperty('--p',(b>a?(Number(rg.value)-a)/(b-a)*100:0)+'%');};
-addEventListener('input',e=>{if(e.target.type==='range')paintRange(e.target);},true);
 function changed(o){if(o&&o.after)o.after();refresh();schedule();}
 /* press: one step (Shift: ten). Hold: repeats, speeding up to ten-at-a-time after a moment. */
 function holdRepeat(btn,fn){let t=0,n=0;const stop=()=>{clearTimeout(t);t=0;};
   btn.addEventListener('pointerdown',e=>{if(e.button!==0)return;e.preventDefault();n=0;const big=e.shiftKey;fn(big);
     const tick=()=>{n++;fn(big||n>14);t=setTimeout(tick,n>14?90:70);};t=setTimeout(tick,350);});
   ['pointerup','pointerleave','pointercancel','blur'].forEach(ev=>btn.addEventListener(ev,stop));}
+/* A slider is one wide bar: label box | track (fill + number) | − | +.
+   Press or drag anywhere on the track to set the value where the pointer is. On touch it waits for a sideways
+   drag (so scrolling the page never changes a setting); a plain tap sets the value.
+   Double-click the bar (or press Enter on it) to type a number; the double-click itself doesn't move the value.
+   Keyboard: the track is focusable; arrows step, Shift+arrows or PageUp/PageDown step ten, Home/End jump to the ends.
+   barTrack() builds the track and buttons; get/put read and write the value, then() runs after every change. */
+function barTrack({label,min,max,step,log,id,get,put,then}){
+  const toF=x=>log?Math.log(x/min)/Math.log(max/min):(x-min)/(max-min),fromF=f=>log?min*Math.pow(max/min,f):min+f*(max-min);
+  const set=x=>{x=clamp(x,min,max);put(+(Math.round(x/step)*step).toFixed(3));};
+  const nm=el('input');nm.type='number';if(id)nm.id=id;nm.min=min;nm.max=max;nm.step=step;nm.setAttribute('aria-label',label+' value');
+  const tr=el('div','track'),fill=el('div','fill');tr.tabIndex=0;tr.setAttribute('role','slider');tr.setAttribute('aria-label',label);
+  tr.setAttribute('aria-valuemin',min);tr.setAttribute('aria-valuemax',max);tr.title='Drag to set · double-click to type';tr.append(fill,nm);
+  const sp=el('div','steps'),dn=el('button','stp','−'),up=el('button','stp','+');dn.type=up.type='button';dn.tabIndex=up.tabIndex=-1;
+  dn.setAttribute('aria-label','Decrease '+label);up.setAttribute('aria-label','Increase '+label);sp.append(dn,up);
+  const sync=()=>{const f=clamp(toF(get()),0,1);tr.style.setProperty('--p',(f*100).toFixed(2)+'%');tr.setAttribute('aria-valuenow',get());if(document.activeElement!==nm)nm.value=get();};
+  const done=()=>{sync();then();};
+  holdRepeat(dn,big=>{set(get()-step*(big?10:1));done();});holdRepeat(up,big=>{set(get()+step*(big?10:1));done();});
+  const setAt=cx=>{const b=tr.getBoundingClientRect();set(fromF(clamp((cx-b.left)/b.width,0,1)));done();};
+  let before=null,beforeT=0;
+  const edit=()=>{tr.classList.add('editing');nm.focus();nm.select();};
+  tr.addEventListener('dblclick',e=>{if(tr.classList.contains('editing'))return;if(before!==null&&performance.now()-beforeT<600){put(before);sync();then();}edit();});
+  nm.addEventListener('blur',()=>tr.classList.remove('editing'));
+  tr.addEventListener('pointerdown',e=>{
+    if(tr.classList.contains('editing')||e.button!==0)return;
+    const now=performance.now();if(now-beforeT>600){before=get();beforeT=now;}
+    const sx=e.clientX,sy=e.clientY,touch=e.pointerType==='touch';let live=!touch;
+    if(live){e.preventDefault();tr.focus({preventScroll:true});tr.setPointerCapture(e.pointerId);setAt(sx);tr.classList.add('drag');}
+    const move=ev=>{if(!live){const dx=Math.abs(ev.clientX-sx),dy=Math.abs(ev.clientY-sy);if(dx>6&&dx>dy){live=true;try{tr.setPointerCapture(ev.pointerId);}catch(_){}tr.classList.add('drag');}else return;}setAt(ev.clientX);};
+    const end=ev=>{tr.removeEventListener('pointermove',move);tr.removeEventListener('pointerup',end);tr.removeEventListener('pointercancel',end);tr.classList.remove('drag');
+      if(touch&&!live&&ev.type==='pointerup'&&Math.abs(ev.clientX-sx)<6&&Math.abs(ev.clientY-sy)<6)setAt(sx);};
+    tr.addEventListener('pointermove',move);tr.addEventListener('pointerup',end);tr.addEventListener('pointercancel',end);});
+  tr.addEventListener('keydown',e=>{if(e.target===nm)return;if(e.key==='Enter'){e.preventDefault();edit();return;}const big=e.shiftKey;let d=0;
+    if(e.key==='ArrowRight'||e.key==='ArrowUp')d=big?10:1;else if(e.key==='ArrowLeft'||e.key==='ArrowDown')d=big?-10:-1;else if(e.key==='PageUp')d=10;else if(e.key==='PageDown')d=-10;
+    else if(e.key==='Home'||e.key==='End'){e.preventDefault();set(e.key==='Home'?min:max);done();return;}else return;
+    e.preventDefault();set(get()+d*step);done();});
+  nm.addEventListener('change',()=>{const x=Number(nm.value);if(Number.isFinite(x))set(x);done();});
+  nm.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key==='Escape'){e.preventDefault();if(e.key==='Escape')nm.value=get();tr.focus({preventScroll:true});}});
+  sync();return {tr,nm,sp,sync};
+}
 function slider(p,k,label,min,max,step,o={}){
-  const {r,l,v}=row(p,label,o,[k]),rg=el('input'),nm=el('input');rg.type='range';nm.type='number';nm.id='c-'+k;l.htmlFor=nm.id;rg.setAttribute('aria-label',label+' slider');
-  const lg=o.log,toS=x=>lg?Math.round(1000*Math.log(x/min)/Math.log(max/min)):x,fromS=x=>lg?min*Math.pow(max/min,x/1000):x;
-  if(lg){rg.min=0;rg.max=1000;rg.step=1;}else{rg.min=min;rg.max=max;rg.step=step;}nm.min=min;nm.max=max;nm.step=step;
-  const set=x=>{x=clamp(x,min,max);S[k]=+(Math.round(x/step)*step).toFixed(3);};
-  rg.addEventListener('input',()=>{set(fromS(Number(rg.value)));nm.value=S[k];changed(o);});
-  nm.addEventListener('change',()=>{const x=Number(nm.value);if(Number.isFinite(x))set(x);changed(o);});
-  nm.addEventListener('keydown',e=>{if(e.key==='Enter')nm.blur();});
-  const sp=el('div','stepper'),dn=el('button','stp','−'),up=el('button','stp','+');dn.type=up.type='button';dn.tabIndex=up.tabIndex=-1;
-  dn.setAttribute('aria-label','Decrease '+label);up.setAttribute('aria-label','Increase '+label);
-  const bump=(d,big)=>{set(S[k]+d*step*(big?10:1));changed(o);};holdRepeat(dn,big=>bump(-1,big));holdRepeat(up,big=>bump(1,big));
-  sp.append(dn,nm,up);v.append(rg,sp);ctl.push({r,when:o.when,sync(){if(document.activeElement!==rg)rg.value=toS(S[k]);if(document.activeElement!==nm)nm.value=S[k];}});
+  const {r,l,v}=row(p,label,o,[k]),kw=r.querySelector('.kw');r.classList.add('barrow');
+  const t=barTrack({label,min,max,step,log:o.log,id:'c-'+k,get:()=>S[k],put:x=>{S[k]=x;},then:()=>changed(o)});l.htmlFor=t.nm.id;
+  const bar=el('div','bar');bar.append(kw,t.tr,t.sp);v.replaceWith(bar);
+  ctl.push({r,when:o.when,sync:t.sync});
+}
+/* Picture tiles: each option is shown as a small swatch rendered by the real engine (a dark-to-light ramp). */
+let thumbEngine=null,thumbN=0;
+function thumb(over){
+  thumbEngine=thumbEngine||ENGINE();const N=56,d=new Uint8ClampedArray(N*N*4);
+  for(let y=0;y<N;y++)for(let x=0;x<N;x++){const i=(y*N+x)*4,v=Math.round(255*(x+y)/(2*N-2));d[i]=d[i+1]=d[i+2]=v;d[i+3]=255;}
+  const s=Object.assign(clone(DEFAULT),{mode:'tonal',tones:{bg:'#15130f',bgEnd:'dark',inks:[{c:'#e7e2d3',p:100}]},sharpAmt:0,hSize:11,hAngle:45},over);
+  const r=thumbEngine.render({id:0,key:'thumb'+(++thumbN),w:N,h:N,s,data:d,custom:false});
+  const c=el('canvas');c.width=c.height=N;if(r.rgba)c.getContext('2d').putImageData(new ImageData(r.rgba,N,N),0,0);return c;
+}
+function tiles(p,k,label,opts,o={}){
+  const {r,v}=row(p,label,o,[k]);r.classList.add('stack');const g=el('div','tiles');g.setAttribute('role','group');g.setAttribute('aria-label',label);
+  const bs=opts.map(([val,txt])=>{const b=el('button','tile');b.type='button';b.id=`c-${k}-${val}`;b.title=txt;
+    b.append(thumb({engine:'halftone',[k]:val}),el('span','',txt));b.onclick=()=>{S[k]=val;changed(o);};g.appendChild(b);return [val,b];});
+  v.appendChild(g);ctl.push({r,when:o.when,sync(){bs.forEach(([val,b])=>b.setAttribute('aria-pressed',S[k]===val));}});
 }
 function select(p,k,label,opts,o={}){
   const {r,l,v}=row(p,label,o,[k]),s=el('select');s.id='c-'+k;l.htmlFor=s.id;
@@ -1076,7 +1136,7 @@ function refresh(){ctl.forEach(c=>{if(c.when)c.r.hidden=!c.when();c.sync();});
   $('#sum-canvas').textContent=`${S.gridH} cells tall`;
   $('#sum-engine').textContent=S.engine==='dither'?(ALGOS.find(a=>a[0]===S.algo)||['',''])[1]:S.engine==='halftone'?HSHAPES.find(a=>a[0]===S.hShape)[1]:'ASCII · '+S.aFont;
   $('#sum-color').textContent=S.mode==='tonal'?`${S.tones.inks.length} ink${S.tones.inks.length>1?'s':''}`:S.mode==='grade'?`${S.palette.length} colors`:S.mode.toUpperCase();
-  extraSums();$$('.panel input[type=range]').forEach(paintRange);markMods();}
+  extraSums();markMods();}
 function markMods(){MODROWS.forEach(({r,keys})=>r.classList.toggle('mod',keys.some(differs)));}
 addEventListener('change',()=>setTimeout(markMods));addEventListener('input',()=>setTimeout(markMods));
 /* one-line summaries on drawer headers, so a closed drawer still says what it's doing */
@@ -1121,7 +1181,7 @@ slider(sec.engine,'patScale','Pattern scale',1,8,1,{when:isTile,tip:'Blows the p
   note(b,()=>'Dark parts of the tile take ink first. A small high-contrast sigil works well.');}
 slider(sec.engine,'mPeriod','Period',2,40,0.5,{when:isMod,tip:'Distance between lines, in cells.'});
 slider(sec.engine,'mAmp','Amount',0,100,1,{when:()=>isMod()&&S.algo!=='modscan',tip:'Wave depth, interference angle or spiral arms.'});
-select(sec.engine,'hShape','Screen',HSHAPES,{when:()=>S.engine==='halftone'});
+tiles(sec.engine,'hShape','Screen',HSHAPES,{when:()=>S.engine==='halftone'});
 slider(sec.engine,'hSize','Screen size',2,40,0.5,{when:()=>S.engine==='halftone',tip:'Dot spacing in cells.'});
 note(sec.engine,()=>{const g=gridDims();return `≈ ${(S.printDpi*g.w/src.width/S.hSize).toFixed(0)} LPI at this grid and print size`;},()=>S.engine==='halftone'&&S.hShape!=='xerox');
 slider(sec.engine,'hAngle','Angle',0,180,0.5,{when:()=>canRotate()&&indexed(),tip:'45° hides the screen best; 0°, 15° and 75° are the other traditional ink angles.'});
@@ -1156,14 +1216,12 @@ const tonalBox=box(sec.color,()=>S.mode==='tonal'),gradeBox=box(sec.color,()=>S.
 }
 function spread(){const k=S.tones.inks,n=k.length,dark=S.tones.bgEnd==='dark';k.sort((a,b)=>lumOf(...hex2rgb(a.c))-lumOf(...hex2rgb(b.c)));k.forEach((ink,i)=>ink.p=Math.round((dark?(i+1)/n:i/n)*100));}
 function renderInks(){const list=$('#inks');list.innerHTML='';
-  S.tones.inks.forEach((ink,i)=>{const r=el('div','ink'),c=el('input'),rg=el('input'),nm=el('input'),x=el('button','x','×');
+  S.tones.inks.forEach((ink,i)=>{const r=el('div','ink'),c=el('input'),x=el('button','x','×');
     c.type='color';c.value=ink.c;c.id='ink-c-'+i;c.setAttribute('aria-label',`Ink ${i+1} colour`);c.addEventListener('input',()=>{ink.c=c.value;schedule();});
-    rg.type='range';rg.min=0;rg.max=100;rg.value=ink.p;rg.id='ink-p-'+i;rg.setAttribute('aria-label',`Ink ${i+1} tone position`);
-    nm.type='number';nm.min=0;nm.max=100;nm.value=ink.p;nm.id='ink-n-'+i;nm.setAttribute('aria-label',`Ink ${i+1} tone position value`);
-    rg.addEventListener('input',()=>{ink.p=Number(rg.value);nm.value=ink.p;schedule();});
-    nm.addEventListener('change',()=>{ink.p=clamp(Math.round(Number(nm.value)||0),0,100);rg.value=nm.value=ink.p;schedule();});
+    const t=barTrack({label:`Ink ${i+1} tone position`,min:0,max:100,step:1,id:'ink-n-'+i,get:()=>ink.p,put:v=>{ink.p=v;},then:schedule});
+    const bar=el('div','bar nolabel');bar.append(t.tr,t.sp);
     x.type='button';x.setAttribute('aria-label',`Remove ink ${i+1}`);x.disabled=S.tones.inks.length<2;x.onclick=()=>{S.tones.inks.splice(i,1);rebuild();schedule();};
-    r.append(c,rg,nm,x);list.appendChild(r);});}
+    r.append(c,bar,x);list.appendChild(r);});}
 { // grade
   const {v}=row(gradeBox,'Colors');const s=el('select');s.id='palCount';for(let i=2;i<=24;i++){const o=el('option','',String(i));o.value=i;s.appendChild(o);}
   const pb=el('button','btn small','Pull from image');pb.type='button';pb.id='pullPal';

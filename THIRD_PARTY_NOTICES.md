@@ -1,6 +1,6 @@
 # Third-party notices
 
-The Ostromoukhov and Zhou-Fang error-diffusion coefficient tables in `Dither Bench II.html` were transcribed from
+The Ostromoukhov and Zhou-Fang error-diffusion coefficient tables in `Dither Bench III.html` were transcribed from
 [dalpil/structure-aware-dithering](https://github.com/dalpil/structure-aware-dithering), used under the MIT License:
 
 ```

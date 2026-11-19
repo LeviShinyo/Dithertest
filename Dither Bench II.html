@@ -45,23 +45,40 @@ input[type=text]{width:100%}
 input[type=number]{width:58px;flex:none;font-family:var(--mono);font-size:.76rem;font-variant-numeric:tabular-nums;text-align:right;-moz-appearance:textfield}
 input[type=number]::-webkit-inner-spin-button{display:none}
 input[type=color]{width:34px;height:26px;flex:none;border:1px solid var(--line-2);border-radius:4px;padding:1px;background:var(--field);cursor:pointer}
-input[type=range]{-webkit-appearance:none;appearance:none;flex:1;min-width:0;height:18px;background:transparent;cursor:pointer;margin:0}
-input[type=range]::-webkit-slider-runnable-track{height:2px;background:var(--line-2)}
-input[type=range]::-moz-range-track{height:2px;background:var(--line-2)}
-input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;margin-top:-5.5px;border-radius:50%;background:var(--fg);border:0}
-input[type=range]::-moz-range-thumb{width:13px;height:13px;border-radius:50%;background:var(--fg);border:0}
-input[type=range]:hover::-webkit-slider-thumb{background:var(--accent)}
+/* sliders: amber fill up to the value (--p is set from script), 24px-tall grab area, 16px thumb */
+input[type=range]{-webkit-appearance:none;appearance:none;flex:1;min-width:0;height:24px;background:transparent;cursor:pointer;margin:0;--p:0%}
+input[type=range]::-webkit-slider-runnable-track{height:3px;border-radius:2px;background:linear-gradient(90deg,var(--accent) var(--p),var(--line-2) var(--p))}
+input[type=range]::-moz-range-track{height:3px;border-radius:2px;background:var(--line-2)}
+input[type=range]::-moz-range-progress{height:3px;border-radius:2px;background:var(--accent)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;margin-top:-6.5px;border-radius:50%;background:var(--fg);border:2px solid var(--panel);box-shadow:0 0 0 1px var(--line-2)}
+input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--fg);border:2px solid var(--panel);box-shadow:0 0 0 1px var(--line-2)}
+input[type=range]:hover::-webkit-slider-thumb,input[type=range]:active::-webkit-slider-thumb{background:var(--accent)}
+input[type=range]:hover::-moz-range-thumb,input[type=range]:active::-moz-range-thumb{background:var(--accent)}
 
 /* drawers */
 details.sec{border-bottom:1px solid var(--line)}
-details.sec>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:8px;padding:11px 14px;font-size:.72rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--fg);user-select:none}
+details.sec>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:8px;padding:11px 14px;font-size:.72rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--fg);user-select:none;background:#1d1e1a;box-shadow:inset 2px 0 0 transparent}
+details.sec>summary:hover{background:#21221e}
+details.sec[open]>summary{box-shadow:inset 2px 0 0 var(--accent);border-bottom:1px solid var(--line);margin-bottom:10px}
 details.sec>summary::-webkit-details-marker{display:none}
 details.sec>summary::before{content:"";width:6px;height:6px;border-right:1.5px solid var(--muted);border-bottom:1.5px solid var(--muted);transform:rotate(-45deg);transition:transform .12s}
 details.sec[open]>summary::before{transform:rotate(45deg)}
 details.sec>summary .sum{margin-left:auto;font-family:var(--mono);font-weight:400;font-size:.68rem;letter-spacing:0;text-transform:none;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:60%}
 .body{display:flex;flex-direction:column;gap:7px;padding:0 14px 14px}
-.r{display:grid;grid-template-columns:96px minmax(0,1fr);gap:8px;align-items:center;min-height:28px}
+.r{display:grid;grid-template-columns:104px minmax(0,1fr);gap:4px 8px;align-items:center;min-height:28px;position:relative}
 .k{color:var(--muted);font-size:.8rem;line-height:1.15}
+.kw{min-width:0;line-height:1.15}
+.kw .help{vertical-align:-3px;margin-left:5px}
+.r.mod .k{color:var(--fg)}
+/* changed-from-the-Look marker: an amber dot in the gutter; it is also the reset button for that row */
+.modb{position:absolute;left:-12px;top:14px;transform:translateY(-50%);width:9px;height:9px;padding:0;border:0;border-radius:50%;background:var(--accent);cursor:pointer;display:none}
+.modb::after{content:"";position:absolute;inset:-7px}
+.modb:hover{box-shadow:0 0 0 3px rgba(219,166,63,.3)}
+.r.mod>.modb{display:block}
+.help{flex:none;width:16px;height:16px;padding:0;border:1px solid var(--line-2);border-radius:50%;background:transparent;color:var(--muted);font:600 .62rem/1 var(--mono);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;position:relative}
+.help::after{content:"";position:absolute;inset:-6px}
+.help:hover,.help[aria-expanded="true"]{border-color:var(--accent);color:var(--accent)}
+.tipt{grid-column:1/-1;margin:0 0 4px;padding:6px 8px;border-left:2px solid var(--accent);background:var(--field);border-radius:0 4px 4px 0;font-size:.74rem;color:var(--fg);line-height:1.4}
 .v{display:flex;align-items:center;gap:8px;min-width:0}
 .sub{font-size:.68rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-top:6px}
 .note{font-size:.74rem;color:var(--muted);margin:0;font-family:var(--mono)}
@@ -77,7 +94,7 @@ details.sec>summary .sum{margin-left:auto;font-family:var(--mono);font-weight:40
 .dots{display:inline-flex}
 .dots i{width:9px;height:12px;border:1px solid rgba(255,255,255,.18);margin-left:-1px}
 .dots i:first-child{margin-left:0}
-.scrollbox{max-height:132px;overflow:auto;border:1px solid var(--line);border-radius:5px;padding:7px;background:var(--field)}
+.scrollbox{max-height:142px;overflow:auto;border:1px solid var(--line);border-radius:5px;padding:7px;background:var(--field)}
 
 /* levels */
 .levels{display:flex;flex-direction:column;gap:4px;border:1px solid var(--line);border-radius:5px;background:var(--field);padding:6px 0 8px}
@@ -89,8 +106,7 @@ details.sec>summary .sum{margin-left:auto;font-family:var(--mono);font-weight:40
 .lnums{display:flex;justify-content:space-between;padding:0 6px}
 
 /* inks */
-.ink{display:grid;grid-template-columns:34px minmax(0,1fr) 46px 24px;gap:7px;align-items:center}
-.ink input[type=number]{width:46px}
+.ink{display:grid;grid-template-columns:34px minmax(0,1fr) 58px 24px;gap:8px;align-items:center}
 .x{width:24px;height:24px;border:1px solid var(--line);background:transparent;border-radius:4px;color:var(--muted);cursor:pointer;padding:0;line-height:1}
 .x:hover{color:var(--warn);border-color:var(--warn)}
 .swatches{display:flex;flex-wrap:wrap;gap:5px}
@@ -134,6 +150,26 @@ textarea{width:100%;min-height:60px;font-family:var(--mono);font-size:.7rem;resi
 .exports figcaption{font-family:var(--mono);font-size:.66rem;color:var(--muted);overflow-wrap:anywhere}
 .toast{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);font-size:.8rem;padding:8px 14px;border-radius:5px;z-index:10;max-width:calc(100% - 32px)}
 .toast.warn{background:var(--warn)}
+/* desktop: the panel header and each open drawer's title stay pinned while the panel scrolls */
+@media (min-width:901px){
+  .head{position:sticky;top:0;z-index:3;background:var(--panel)}
+  details.sec>summary{position:sticky;top:var(--headH,0px);z-index:2}
+}
+/* phone: the proof stays pinned above the controls; toolbar packs into two rows with Undo/Redo/Reset first */
+@media (max-width:900px){
+  .viewport{position:sticky;top:0;z-index:5;background:var(--bg);margin:-12px 0 0;padding:12px 0 10px;box-shadow:0 8px 12px -8px rgba(0,0,0,.8)}
+  .stage{height:34vh}
+  .plates{max-height:34vh}
+  .exports{max-height:22vh}
+  .vbar .grp{display:contents}
+  .vbar{gap:6px;justify-content:flex-start}
+  .vbar .tb,.vbar .seg button{min-height:34px}
+  #undoBtn{order:1}#redoBtn{order:2}#resetBtn{order:3}
+  #holdOrig{order:4;margin-left:auto}
+  .vbar .seg{order:5}
+  .vbar .stat{order:7;flex-basis:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #busy{order:6;flex-basis:auto}
+}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 
@@ -181,14 +217,14 @@ textarea{width:100%;min-height:60px;font-family:var(--mono);font-size:.7rem;resi
       </div>
       <p class="src" id="srcInfo"></p>
     </div>
-    <details class="sec" open><summary>Looks</summary><div class="body" id="b-looks"></div></details>
+    <details class="sec"><summary>Looks<span class="sum" id="sum-looks"></span></summary><div class="body" id="b-looks"></div></details>
     <details class="sec" open><summary>Canvas<span class="sum" id="sum-canvas"></span></summary><div class="body" id="b-canvas"></div></details>
     <details class="sec" open><summary>Engine<span class="sum" id="sum-engine"></span></summary><div class="body" id="b-engine"></div></details>
     <details class="sec" open><summary>Color<span class="sum" id="sum-color"></span></summary><div class="body" id="b-color"></div></details>
-    <details class="sec"><summary>Shape the image</summary><div class="body" id="b-shape"></div></details>
-    <details class="sec"><summary>Print finish</summary><div class="body" id="b-finish"></div></details>
-    <details class="sec"><summary>Output</summary><div class="body" id="b-output"></div></details>
-    <details class="sec"><summary>My presets</summary><div class="body" id="b-presets"></div></details>
+    <details class="sec"><summary>Shape the image<span class="sum" id="sum-shape"></span></summary><div class="body" id="b-shape"></div></details>
+    <details class="sec"><summary>Print finish<span class="sum" id="sum-finish"></span></summary><div class="body" id="b-finish"></div></details>
+    <details class="sec"><summary>Output<span class="sum" id="sum-output"></span></summary><div class="body" id="b-output"></div></details>
+    <details class="sec"><summary>My presets<span class="sum" id="sum-presets"></span></summary><div class="body" id="b-presets"></div></details>
   </aside>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
@@ -893,19 +929,26 @@ function applyRecipe(r){
   S.patScale=clamp(Math.round(S.patScale),1,8);S.tileSize=clamp(Math.round(S.tileSize),2,64);S.lvB=clamp(Math.round(S.lvB),0,253);S.lvW=clamp(Math.round(S.lvW),S.lvB+2,255);S.lvP=clamp(S.lvP,0.02,0.98);
 }
 function applyLook(r){const keep={view:S.view,zoom:S.zoom,printDpi:S.printDpi,fileScale:S.fileScale,transparent:S.transparent};
-  S=Object.assign(clone(DEFAULT),keep);applyRecipe(clone(r));rebuild();clearExports();schedule();}
+  S=Object.assign(clone(DEFAULT),keep);applyRecipe(clone(r));markBase(lookName(r));rebuild();clearExports();schedule();}
 function renderRecipe(){const p=$('#recipe');if(p)p.textContent=JSON.stringify(recipe(),null,1);}
 
 /* ---------- undo / redo / reset ---------- */
+/* "base": the settings of the last Look, reset or preset you loaded. Rows that differ from it get an amber dot.
+   Each history snapshot remembers its base, so undoing past a Look also brings back that Look's base. */
+let BASE=null,BASENAME='',BASEOF=new Map();
+const curSettings=()=>{const {view,zoom,...r}=S;return clone(r);};
+const differs=k=>!!BASE&&JSON.stringify(S[k])!==JSON.stringify(BASE[k]);
+function markBase(name){BASE=curSettings();BASENAME=name||'Custom';}
+function lookName(r){for(const [,items] of LOOKS)for(const [n,lr] of items)if(lr===r)return n;return 'Custom';}
 const H={undo:[],redo:[],cur:null,applying:false,t:0};
 const snap=()=>JSON.stringify(recipe());
 function syncUndoUi(){$('#undoBtn').disabled=!H.undo.length;$('#redoBtn').disabled=!H.redo.length;}
 function commitSoon(){if(H.applying)return;clearTimeout(H.t);H.t=setTimeout(commit,400);}
-function commit(){clearTimeout(H.t);const s=snap();if(s===H.cur)return;if(H.cur!==null){H.undo.push(H.cur);if(H.undo.length>150)H.undo.shift();}H.redo.length=0;H.cur=s;syncUndoUi();}
-function restore(s){H.applying=true;try{S=Object.assign(clone(DEFAULT),{view:S.view,zoom:S.zoom});applyRecipe(JSON.parse(s));rebuild();schedule();}finally{H.applying=false;}syncUndoUi();}
+function commit(){clearTimeout(H.t);const s=snap();if(s===H.cur)return;if(H.cur!==null){H.undo.push(H.cur);if(H.undo.length>150)H.undo.shift();}H.redo.length=0;H.cur=s;BASEOF.set(s,[BASE,BASENAME]);syncUndoUi();}
+function restore(s){H.applying=true;try{S=Object.assign(clone(DEFAULT),{view:S.view,zoom:S.zoom});applyRecipe(JSON.parse(s));if(BASEOF.has(s))[BASE,BASENAME]=BASEOF.get(s);rebuild();schedule();}finally{H.applying=false;}syncUndoUi();}
 function undo(){commit();if(!H.undo.length)return;H.redo.push(H.cur);H.cur=H.undo.pop();restore(H.cur);}
 function redo(){commit();if(!H.redo.length)return;H.undo.push(H.cur);H.cur=H.redo.pop();restore(H.cur);}
-function resetAll(){commit();S=Object.assign(clone(DEFAULT),{view:S.view,zoom:S.zoom});rebuild();schedule();commit();toast('Settings reset. Undo brings them back.');}
+function resetAll(){commit();S=Object.assign(clone(DEFAULT),{view:S.view,zoom:S.zoom});markBase('Defaults');rebuild();schedule();commit();toast('Settings reset. Undo brings them back.');}
 $('#undoBtn').onclick=undo;$('#redoBtn').onclick=redo;$('#resetBtn').onclick=resetAll;
 addEventListener('keydown',e=>{
   if(!(e.ctrlKey||e.metaKey))return;const t=e.target;
@@ -918,10 +961,21 @@ addEventListener('keydown',e=>{
 /* ---------- control builders ---------- */
 const sec={};['looks','canvas','engine','color','shape','finish','output','presets'].forEach(id=>sec[id]=$('#b-'+id));
 const ctl=[];
-function row(p,label,o={}){const r=el('div','r'),l=el('label','k',label),v=el('div','v');if(o.tip)r.title=o.tip;r.append(l,v);p.appendChild(r);return {r,l,v};}
+const MODROWS=[];let tipN=0;
+function resetKeys(keys,o){if(!BASE)return;keys.forEach(k=>S[k]=clone(BASE[k]));if(o&&o.after)o.after();rebuild();schedule();}
+function row(p,label,o={},keys){const r=el('div','r'),kw=el('div','kw'),l=el('label','k',label),v=el('div','v');kw.appendChild(l);r.append(kw,v);
+  if(o.tip){const b=el('button','help','?'),t=el('p','tipt',o.tip);b.type='button';t.id='tip-'+(++tipN);t.hidden=true;
+    b.setAttribute('aria-label',`About ${label}`);b.setAttribute('aria-expanded','false');b.setAttribute('aria-controls',t.id);
+    b.onclick=()=>{t.hidden=!t.hidden;b.setAttribute('aria-expanded',!t.hidden);};kw.appendChild(b);r.appendChild(t);}
+  if(keys){const m=el('button','modb');m.type='button';m.title=`Changed. Click to put ${label} back.`;m.setAttribute('aria-label',`Reset ${label}`);
+    m.onclick=()=>resetKeys(keys,o);l.addEventListener('dblclick',e=>{if(r.classList.contains('mod')){e.preventDefault();resetKeys(keys,o);}});
+    r.prepend(m);MODROWS.push({r,keys});}
+  p.appendChild(r);return {r,l,v};}
+const paintRange=rg=>{const a=Number(rg.min),b=Number(rg.max);rg.style.setProperty('--p',(b>a?(Number(rg.value)-a)/(b-a)*100:0)+'%');};
+addEventListener('input',e=>{if(e.target.type==='range')paintRange(e.target);},true);
 function changed(o){if(o&&o.after)o.after();refresh();schedule();}
 function slider(p,k,label,min,max,step,o={}){
-  const {r,l,v}=row(p,label,o),rg=el('input'),nm=el('input');rg.type='range';nm.type='number';nm.id='c-'+k;l.htmlFor=nm.id;rg.setAttribute('aria-label',label+' slider');
+  const {r,l,v}=row(p,label,o,[k]),rg=el('input'),nm=el('input');rg.type='range';nm.type='number';nm.id='c-'+k;l.htmlFor=nm.id;rg.setAttribute('aria-label',label+' slider');
   const lg=o.log,toS=x=>lg?Math.round(1000*Math.log(x/min)/Math.log(max/min)):x,fromS=x=>lg?min*Math.pow(max/min,x/1000):x;
   if(lg){rg.min=0;rg.max=1000;rg.step=1;}else{rg.min=min;rg.max=max;rg.step=step;}nm.min=min;nm.max=max;nm.step=step;
   const set=x=>{x=clamp(x,min,max);S[k]=+(Math.round(x/step)*step).toFixed(3);};
@@ -931,29 +985,44 @@ function slider(p,k,label,min,max,step,o={}){
   v.append(rg,nm);ctl.push({r,when:o.when,sync(){if(document.activeElement!==rg)rg.value=toS(S[k]);if(document.activeElement!==nm)nm.value=S[k];}});
 }
 function select(p,k,label,opts,o={}){
-  const {r,l,v}=row(p,label,o),s=el('select');s.id='c-'+k;l.htmlFor=s.id;
+  const {r,l,v}=row(p,label,o,[k]),s=el('select');s.id='c-'+k;l.htmlFor=s.id;
   const add=(par,[val,txt])=>{const op=el('option','',txt);op.value=val;par.appendChild(op);};
   opts.forEach(g=>{if(g.group){const og=el('optgroup');og.label=g.group;g.items.forEach(i=>add(og,i));s.appendChild(og);}else add(s,g);});
   s.addEventListener('change',()=>{S[k]=typeof DEFAULT[k]==='number'?Number(s.value):s.value;changed(o);});
   v.appendChild(s);ctl.push({r,when:o.when,sync(){s.value=String(S[k]);}});return v;
 }
 function seg(p,k,label,opts,o={}){
-  let r,v;if(label){({r,v}=row(p,label,o));}else{r=v=el('div');p.appendChild(r);}
+  let r,v;if(label){({r,v}=row(p,label,o,[k]));}else{r=v=el('div');p.appendChild(r);}
   const g=el('div','seg'+(o.big?' big':''));g.setAttribute('role','group');g.setAttribute('aria-label',label||k);
   const bs=opts.map(([val,txt])=>{const b=el('button','',txt);b.type='button';b.id=`c-${k}-${val}`;b.onclick=()=>{S[k]=val;changed(o);};g.appendChild(b);return [val,b];});
   v.appendChild(g);ctl.push({r,when:o.when,sync(){bs.forEach(([val,b])=>b.setAttribute('aria-pressed',S[k]===val));}});
 }
 const onoff=(p,k,label,o)=>seg(p,k,label,[[false,'Off'],[true,'On']],o);
-function color(p,k,label,o={}){const {r,l,v}=row(p,label,o),c=el('input');c.type='color';c.id='c-'+k;l.htmlFor=c.id;
+function color(p,k,label,o={}){const {r,l,v}=row(p,label,o,[k]),c=el('input');c.type='color';c.id='c-'+k;l.htmlFor=c.id;
   c.addEventListener('input',()=>{S[k]=c.value;schedule();});v.appendChild(c);ctl.push({r,when:o.when,sync(){c.value=S[k];}});}
-function text(p,k,label,o={}){const {r,l,v}=row(p,label,o),t=el('input');t.type='text';t.id='c-'+k;t.maxLength=o.max||80;t.spellcheck=false;l.htmlFor=t.id;let tt=0;
+function text(p,k,label,o={}){const {r,l,v}=row(p,label,o,[k]),t=el('input');t.type='text';t.id='c-'+k;t.maxLength=o.max||80;t.spellcheck=false;l.htmlFor=t.id;let tt=0;
   t.addEventListener('input',()=>{S[k]=t.value;clearTimeout(tt);tt=setTimeout(schedule,250);});v.appendChild(t);ctl.push({r,when:o.when,sync(){if(document.activeElement!==t)t.value=S[k];}});}
 function note(p,fn,when,id){const n=el('p','note');if(id)n.id=id;p.appendChild(n);ctl.push({r:n,when,sync(){if(fn)n.textContent=fn();}});return n;}
 function box(p,when){const b=el('div');b.style.cssText='display:flex;flex-direction:column;gap:7px';p.appendChild(b);ctl.push({r:b,when,sync(){}});return b;}
 function refresh(){ctl.forEach(c=>{if(c.when)c.r.hidden=!c.when();c.sync();});
   $('#sum-canvas').textContent=`${S.gridH} cells tall`;
   $('#sum-engine').textContent=S.engine==='dither'?(ALGOS.find(a=>a[0]===S.algo)||['',''])[1]:S.engine==='halftone'?HSHAPES.find(a=>a[0]===S.hShape)[1]:'ASCII · '+S.aFont;
-  $('#sum-color').textContent=S.mode==='tonal'?`${S.tones.inks.length} ink${S.tones.inks.length>1?'s':''}`:S.mode==='grade'?`${S.palette.length} colors`:S.mode.toUpperCase();}
+  $('#sum-color').textContent=S.mode==='tonal'?`${S.tones.inks.length} ink${S.tones.inks.length>1?'s':''}`:S.mode==='grade'?`${S.palette.length} colors`:S.mode.toUpperCase();
+  extraSums();$$('.panel input[type=range]').forEach(paintRange);markMods();}
+function markMods(){MODROWS.forEach(({r,keys})=>r.classList.toggle('mod',keys.some(differs)));}
+addEventListener('change',()=>setTimeout(markMods));addEventListener('input',()=>setTimeout(markMods));
+/* one-line summaries on drawer headers, so a closed drawer still says what it's doing */
+function extraSums(){
+  const list=(a,none)=>a.length?a.slice(0,3).join(' · ')+(a.length>3?` +${a.length-3}`:''):none;
+  const edited=BASE&&Object.keys(DEFAULT).some(differs);
+  $('#sum-looks').textContent=BASE?BASENAME+(edited?' · edited':''):'';
+  const sh=[];if(S.lvB!==0||S.lvW!==255||S.lvP!==0.5)sh.push('levels');if(S.contrast)sh.push('contrast '+S.contrast);if(S.sat&&S.mode!=='tonal')sh.push('saturation '+S.sat);
+  if(S.sharpAmt)sh.push('sharpen '+S.sharpAmt);if(S.blur)sh.push('blur '+S.blur);if(S.noise)sh.push(S.noise<0?'denoise':'grain');if(S.edges)sh.push('outlines');if(S.invert)sh.push('inverted');
+  $('#sum-shape').textContent=list(sh,'untouched');
+  const fi=[];if(S.fMisreg)fi.push('misregister '+S.fMisreg);if(S.fOverprint&&indexed())fi.push('overprint');if(S.fWear)fi.push('wear '+S.fWear);if(S.fGrain)fi.push('grain '+S.fGrain);if(S.fCrackle)fi.push('crackle '+S.fCrackle);
+  $('#sum-finish').textContent=list(fi,'clean');
+  $('#sum-output').textContent=`${S.printDpi} dpi · ${S.fileScale==='print'?'print-ready':S.fileScale+' px/cell'}`+(S.transparent?' · transparent':'');
+  const sv=readSaved();$('#sum-presets').textContent=sv&&sv.length?`${sv.length} saved`:'';}
 const notes=refresh;
 function rebuild(){renderInks();renderPalette();syncLevels();if(S.algo==='custom')buildTile();refresh();}
 function chip(name,cols,fn){const b=el('button','chip');b.type='button';if(cols){const d=el('span','dots');cols.forEach(c=>{const i=el('i');i.style.background=c;d.appendChild(i);});b.appendChild(d);}
@@ -1045,7 +1114,7 @@ slider(cmykBox,'kAmt','Black plate',0,100,1,{tip:'How much shared darkness moves
 ['C','M','Y','K'].forEach((c,i)=>slider(cmykBox,'ang'+c,['Cyan','Magenta','Yellow','Black'][i]+' angle',0,180,0.5,{when:canRotate}));
 
 /* ---------- Shape ---------- */
-{const {v,r}=row(sec.shape,'Levels');r.style.alignItems='start';v.style.display='block';
+{const {v,r}=row(sec.shape,'Levels',{},['lvB','lvW','lvP']);r.style.alignItems='start';v.style.display='block';
   v.innerHTML=`<div class="levels"><canvas id="hist" width="256" height="40" aria-label="Luminance histogram"></canvas><div class="ramp" aria-hidden="true"></div>
   <div class="ltrack" id="ltrack"><button type="button" class="lh" id="lhB" aria-label="Black point"></button><button type="button" class="lh mid" id="lhM" aria-label="Midtone"></button><button type="button" class="lh" id="lhW" aria-label="White point"></button></div>
   <div class="lnums"><input type="number" id="lvB" min="0" max="253" step="1" aria-label="Black point value"><input type="number" id="lvG" min="0.1" max="9.99" step="0.01" aria-label="Midtone gamma"><input type="number" id="lvW" min="2" max="255" step="1" aria-label="White point value"></div></div>`;}
@@ -1089,12 +1158,13 @@ note(sec.output,null,null,'saveNote');
   sb.onclick=save;nm.addEventListener('keydown',e=>{if(e.key==='Enter')save();});
   cp.onclick=()=>{const t=pre.textContent,sel=()=>{const r=document.createRange();r.selectNodeContents(pre);const s=getSelection();s.removeAllRanges();s.addRange(r);cp.textContent='Selected · Ctrl+C';};
     try{navigator.clipboard.writeText(t).then(()=>{cp.textContent='Copied';setTimeout(()=>cp.textContent='Copy recipe',1400);},sel);}catch(e){sel();}};
-  ld.onclick=()=>{rm.hidden=false;try{applyRecipe(JSON.parse(ta.value));rebuild();schedule();rm.textContent='Recipe loaded.';rm.className='note';}catch(e){rm.textContent=`Couldn’t read that: ${e.message}`;rm.className='note warn';}};
+  ld.onclick=()=>{rm.hidden=false;try{applyRecipe(JSON.parse(ta.value));markBase('Pasted recipe');rebuild();schedule();rm.textContent='Recipe loaded.';rm.className='note';}catch(e){rm.textContent=`Couldn’t read that: ${e.message}`;rm.className='note warn';}};
 }
 function renderSaved(){
   const box=$('#saved'),list=readSaved(),msg=$('#presetMsg');box.innerHTML='';
   if(list===null){msg.textContent='This browser is blocking storage, so presets can’t be saved here. Copy the recipe instead.';msg.className='note warn';return;}
-  list.forEach((p,i)=>{const r=el('div','item'),b=chip(p.name,null,()=>{try{applyRecipe(p.recipe);rebuild();schedule();}catch(e){}}),del=el('button','btn small','Delete');
+  extraSums();
+  list.forEach((p,i)=>{const r=el('div','item'),b=chip(p.name,null,()=>{try{applyRecipe(p.recipe);markBase(p.name);rebuild();schedule();}catch(e){}}),del=el('button','btn small','Delete');
     del.type='button';del.setAttribute('aria-label',`Delete preset ${p.name}`);del.onclick=()=>{const l=readSaved()||[];l.splice(i,1);writeSaved(l);renderSaved();};r.append(b,del);box.appendChild(r);});
 }
 
@@ -1127,6 +1197,7 @@ $('#lvG').addEventListener('change',e=>{const g=clamp(Number(e.target.value)||1,
 
 /* ---------- viewport bindings ---------- */
 $('#fileIn').addEventListener('change',e=>loadFile(e.target.files[0],false));
+{const hd=$('.head'),pn=$('.panel'),setH=()=>pn.style.setProperty('--headH',hd.offsetHeight+'px');setH();if(window.ResizeObserver)new ResizeObserver(setH).observe(hd);}
 $('#saveTop').onclick=savePng;
 $('#vComp').onclick=()=>{S.view='comp';$('#vComp').setAttribute('aria-pressed',true);$('#vPlates').setAttribute('aria-pressed',false);$('#stage').hidden=false;$('#plates').hidden=true;updateStat();};
 $('#vPlates').onclick=()=>{S.view='plates';$('#vPlates').setAttribute('aria-pressed',true);$('#vComp').setAttribute('aria-pressed',false);$('#stage').hidden=true;$('#plates').hidden=false;renderPlates();updateStat();};
@@ -1145,7 +1216,7 @@ addEventListener('paste',e=>{if(e.target.closest&&e.target.closest('textarea,inp
 
 drawSample();buildTile();renderSaved();updateSaveUi();
 applyLook(LOOKS[0][1][0][1]);
-H.cur=snap();H.undo.length=0;syncUndoUi();
+H.cur=snap();H.undo.length=0;BASEOF.set(H.cur,[BASE,BASENAME]);syncUndoUi();
 })();
 </script>
 

@@ -267,7 +267,7 @@ const DEFAULT={
   gridH:420, resample:'smooth', lineKeep:75, printDpi:300, fileScale:'print', transparent:false,
   engine:'dither', algo:'floyd', serp:true, patScale:1, tileSize:8, mPeriod:6, mAmp:50,
   hShape:'round', hSize:6, hAngle:45,
-  aMode:'ramp', aSet:'standard', aChars:'.:+*#@', aText:'MEMENTO MORI ', aFont:'JetBrains Mono', aSize:10, aWeight:50, aEdges:0,
+  aMode:'ramp', aSet:'standard', aChars:'.:+*#@', aText:'MEMENTO MORI ', aFont:'JetBrains Mono', aSize:10, aWeight:50, aEdges:0, aPick:'density', aContrast:50,
   strength:100, cleanup:false, breakup:0, linear:false,
   mode:'tonal',
   tones:{bg:'#0d0d0b',bgEnd:'dark',inks:[{c:'#e9a53c',p:100}]},
@@ -284,7 +284,7 @@ const PATTERN=[['hline','Horizontal lines'],['vline','Vertical lines'],['diag','
 const MODUL=[['modscan','Scanline'],['modwave','Wave'],['modmoire','Interference'],['modrings','Rings and spirals']];
 const ALGOS=[...DIFFUSION,...ORDERED,...PATTERN,...MODUL,['none','Threshold only']];
 const HSHAPES=[['round','Round dot'],['ellipse','Ellipse'],['square','Square'],['diamond','Diamond'],['line','Line'],['cross','Grid'],['hatch','Cross-hatch'],['stochastic','Stochastic dot'],['xerox','Xerox grain']];
-const ASCII_SETS={standard:' .:-=+*#%@',dense:' .\'`^",:;Il!i><~+_-?][}{1)(|/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$',blocks:' ░▒▓█',digits:' 0123456789',binary:' 01',dots:' ·•●',slashes:' -/\\|+X',glyphs:' +×†‡¤§¶#',letters:' ivxlcdm'};
+const ASCII_SETS={full:' '+Array.from({length:94},(_,i)=>String.fromCharCode(33+i)).join(''),standard:' .:-=+*#%@',dense:' .\'`^",:;Il!i><~+_-?][}{1)(|/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$',blocks:' ░▒▓█',digits:' 0123456789',binary:' 01',dots:' ·•●',slashes:' -/\\|+X',glyphs:' +×†‡¤§¶#',letters:' ivxlcdm'};
 const FONTS=['JetBrains Mono','IBM Plex Mono','Space Mono','Courier Prime','VT323','Silkscreen','Press Start 2P','UnifrakturCook','Pirata One','Jacquard 12'];
 const isDiff=()=>S.engine==='dither'&&DIFFUSION.some(a=>a[0]===S.algo);
 const isMod=()=>S.engine==='dither'&&S.algo.startsWith('mod');
@@ -540,7 +540,27 @@ function ENGINE(){
     /* ---- stage 2: break it down ---- */
     const str=s.strength/100,A=s.engine==='ascii'?job.glyphs:null,bo=(s.breakup||0)/100;
     const ker=s.engine==='dither'?KERNELS[s.algo]:null,riem=s.engine==='dither'&&s.algo==='riemersma';
-    function asciiPrep(L){
+    /* Shape mode: each character cell is read through 6 sampling circles (2 columns x 3 rows, staggered) and the glyph
+       whose own 6-circle ink pattern is nearest wins, so characters trace contours instead of only matching darkness.
+       Before matching, a contrast boost (exponent) sharpens light/dark borders: first per component against 10 circles
+       just outside the cell (so a bright neighbour darkens the side facing it), then across the cell's own components.
+       Method after Alex Harri, "ASCII characters are not pixels" (2026). ext = {lo,hi,inv}: the value range, and whether
+       ink sits on the dark side (light background). */
+    function shapeGlyphs(L,cols,rows,gw,gh,ext){
+      const lo=ext.lo,span=Math.max(1e-6,ext.hi-ext.lo),inv=ext.inv,SI=A.si,SE=A.se,AF=A.af,SH=A.shape,nR=A.nR,ex=1+(s.aContrast??50)/25;
+      const val=(x,y)=>{x=x<0?0:x>=w?w-1:x;y=y<0?0:y>=h?h-1:y;let v=(L[y*w+x]-lo)/span;v=v<0?0:v>1?1:v;return inv?1-v:v;};
+      const mean=(o,ox,oy)=>{let t=0;for(let q=0;q<o.length;q+=2)t+=val(ox+o[q],oy+o[q+1]);return t/(o.length>>1);};
+      const out=new Uint16Array(cols*rows),vi=new Float32Array(6),ve=new Float32Array(10);
+      for(let cy=0;cy<rows;cy++)for(let cx=0;cx<cols;cx++){const ox=cx*gw,oy=cy*gh;
+        for(let k=0;k<6;k++)vi[k]=mean(SI[k],ox,oy);
+        if(ex!==1){for(let k=0;k<10;k++)ve[k]=mean(SE[k],ox,oy);
+          for(let k=0;k<6;k++){let mx=vi[k];for(const e of AF[k])if(ve[e]>mx)mx=ve[e];vi[k]=mx>0?Math.pow(vi[k]/mx,ex)*mx:0;}
+          let m=0;for(let k=0;k<6;k++)if(vi[k]>m)m=vi[k];if(m>0)for(let k=0;k<6;k++)vi[k]=Math.pow(vi[k]/m,ex)*m;}
+        let best=1e9,bj=0;for(let g=0;g<nR;g++){let d=0;for(let k=0;k<6;k++){const t=SH[g*6+k]-vi[k];d+=t*t;}if(d<best){best=d;bj=g;}}
+        out[cy*cols+cx]=bj;}
+      return out;
+    }
+    function asciiPrep(L,ext){
       const gw=A.gw,gh=A.gh,gs=gw*gh,cols=Math.ceil(w/gw),rows=Math.ceil(h/gh),C=new Float32Array(cols*rows),cnt=new Uint16Array(cols*rows);
       for(let y=0;y<h;y++){const r=((y/gh)|0)*cols;for(let x=0;x<w;x++){const ci=r+((x/gw)|0);C[ci]+=L[y*w+x];cnt[ci]++;}}
       for(let i=0;i<C.length;i++)C[i]/=cnt[i]||1;
@@ -550,8 +570,10 @@ function ENGINE(){
           const gx=C[y0+x2]+2*C[y1+x2]+C[y2+x2]-C[y0+x0]-2*C[y1+x0]-C[y2+x0],gy=C[y2+x0]+2*C[y2+x]+C[y2+x2]-C[y0+x0]-2*C[y0+x]-C[y0+x2];
           if(Math.hypot(gx,gy)>cut){let a=Math.atan2(gy,gx);a=((a%Math.PI)+Math.PI)%Math.PI;edge[y1+x]=1+(Math.round(a/(Math.PI/4))%4);}}}}
       const thr=235-215*s.aWeight/100,nR=A.nR,data=A.data,seq=A.seq,text=s.aMode==='text'&&seq&&seq.length;
+      const glyph=s.aPick==='shape'&&!text&&A.shape&&ext?shapeGlyphs(L,cols,rows,gw,gh,ext):null;
       const pick=(f,x,y)=>{const ci=((y/gh)|0)*cols+((x/gw)|0),o=(y%gh)*gw+(x%gw),e=edge?edge[ci]:0;
         if(e)return data[(nR+e-1)*gs+o]>thr;
+        if(glyph)return data[glyph[ci]*gs+o]>thr;
         if(text)return data[seq[ci%seq.length]*gs+o]>Math.max(12,255-f*235*(0.5+s.aWeight/100));
         return data[Math.min(nR-1,(f*nR)|0)*gs+o]>thr;};
       return {C,cols,gw,gh,pick};
@@ -576,7 +598,7 @@ function ENGINE(){
         return out;}
       if(riem){riemersma([L],w,h,1,near,lv.map(p=>[p]),out,str,[[lo,hi]]);return out;}
       let pick,cell=null;
-      if(A){cell=asciiPrep(L);pick=cell.pick;}
+      if(A){cell=asciiPrep(L,{lo,hi,inv});pick=cell.pick;}
       else{const th=thresholdFn(s,job.tileMap,ang,w,h);pick=(f,x,y)=>f>0.5+(th(x,y)-0.5)*str;}
       for(let y=0;y<h;y++)for(let x=0;x<w;x++){const i=y*w+x,v=clamp(cell?cell.C[((y/cell.gh)|0)*cell.cols+((x/cell.gw)|0)]:L[i],lo,hi);
         let j=0;while(j<m-2&&v>=lv[j+1])j++;const f=(v-lv[j])/(lv[j+1]-lv[j]);
@@ -604,7 +626,7 @@ function ENGINE(){
       const ex={bo,lin:!!s.linear,light:s.linear?(r,g,b)=>Math.cbrt(0.2126*r+0.7152*g+0.0722*b):l=>l};
       if(ker)diffuseVec(ch,w,h,Q,QV,map,str,ker,lims,s.serp,ex);
       else if(riem)riemersma(ch,w,h,3,Q,QV,map,str,lims);
-      else if(A){const c0=asciiPrep(ch[0]),c1=asciiPrep(ch[1]),c2=asciiPrep(ch[2]),nc=c0.C.length,cj=new Uint8Array(nc),cf=new Float32Array(nc),b0=QV[0];
+      else if(A){const c0=asciiPrep(ch[0],{lo:0,hi:1,inv:QO[0][0]>0.5}),c1=asciiPrep(ch[1]),c2=asciiPrep(ch[2]),nc=c0.C.length,cj=new Uint8Array(nc),cf=new Float32Array(nc),b0=QV[0];
         for(let i=0;i<nc;i++){const l=c0.C[i],a=c1.C[i],b=c2.C[i];let j=1,best=1e9;
           for(let q=1;q<P;q++){const p=QV[q],x=(l-p[0])**2+(a-p[1])**2+(b-p[2])**2;if(x<best){best=x;j=q;}}
           cj[i]=j;const p=QV[j];cf[i]=clamp(Math.sqrt(((l-b0[0])**2+(a-b0[1])**2+(b-b0[2])**2)/Math.max(1e-6,(p[0]-b0[0])**2+(p[1]-b0[1])**2+(p[2]-b0[2])**2)),0,1);}
@@ -671,6 +693,24 @@ function buildTile(){
 let atlas=null,atlasKey='';
 const asciiChars=()=>S.aMode==='text'?(S.aText||'DITHER '):(S.aSet==='custom'?' '+(S.aChars||'.:*#'):ASCII_SETS[S.aSet]||ASCII_SETS.standard);
 const wantAtlasKey=()=>[S.aFont,S.aSize,S.aMode,asciiChars()].join('|');
+/* Shape-matching geometry. Circle centres are fractions of the cell; radius is 0.3 x cell width.
+   AFFECT lists which outside circles can boost each inside circle's contrast. */
+const SHAPE_IN=[[0.28,0.20],[0.72,0.14],[0.28,0.53],[0.72,0.47],[0.28,0.86],[0.72,0.80]];
+const SHAPE_OUT=[[0.28,-0.12],[0.72,-0.12],[-0.2,0.17],[1.2,0.17],[-0.2,0.5],[1.2,0.5],[-0.2,0.83],[1.2,0.83],[0.28,1.12],[0.72,1.12]];
+const SHAPE_AFFECT=[[0,1,2,4],[0,1,3,5],[2,4,6],[3,5,7],[4,6,8,9],[5,7,8,9]];
+function circleOffsets([fx,fy],gw,gh){const cx=fx*gw,cy=fy*gh,r=0.3*gw,o=[];
+  for(let y=Math.floor(cy-r);y<=Math.ceil(cy+r);y++)for(let x=Math.floor(cx-r);x<=Math.ceil(cx+r);x++)if((x+.5-cx)**2+(y+.5-cy)**2<=r*r)o.push(x,y);
+  if(!o.length)o.push(Math.floor(cx),Math.floor(cy));return Int16Array.from(o);}
+function shapeInfo(uniq,order,gw,gh,font){
+  // glyph ink per circle, measured on a 4x larger rendering for accuracy, then normalised per circle across the set
+  const K=4,W=gw*K,H=gh*K,c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d',{willReadFrequently:true});
+  const big=font.replace(/^(\d+)px/,(m,n)=>(n*K)+'px'),masks=SHAPE_IN.map(f=>circleOffsets(f,W,H));
+  const raw=uniq.map(chr=>{x.fillStyle='#000';x.fillRect(0,0,W,H);x.fillStyle='#fff';x.font=big;x.textAlign='center';x.textBaseline='middle';x.fillText(chr,W/2,H/2+H*0.04);
+    const d=x.getImageData(0,0,W,H).data;return masks.map(o=>{let t=0,n=0;for(let q=0;q<o.length;q+=2){const px=o[q],py=o[q+1];if(px>=0&&py>=0&&px<W&&py<H)t+=d[(py*W+px)*4];n++;}return t/(255*n);});});
+  const mx=[0,0,0,0,0,0];raw.forEach(v=>v.forEach((a,k)=>{if(a>mx[k])mx[k]=a;}));
+  const shape=new Float32Array(uniq.length*6);order.forEach((from,to)=>raw[from].forEach((a,k)=>{shape[to*6+k]=mx[k]>0?a/mx[k]:0;}));
+  return {shape,si:SHAPE_IN.map(f=>circleOffsets(f,gw,gh)),se:SHAPE_OUT.map(f=>circleOffsets(f,gw,gh)),af:SHAPE_AFFECT};
+}
 async function ensureAtlas(){
   const key=wantAtlasKey();if(key===atlasKey)return;
   const text=S.aMode==='text',chars=[...asciiChars()],uniq=[...new Set(chars)],all=uniq.concat(['|','/','-','\\']);
@@ -683,7 +723,8 @@ async function ensureAtlas(){
   const cov=all.map((_,k)=>{let t=0;for(let i=0;i<gs;i++)t+=raw[k*gs+i];return t;});
   let order=uniq.map((_,i)=>i);if(!text)order.sort((a,b)=>cov[a]-cov[b]);
   const data=new Uint8Array(raw.length);order.concat([0,1,2,3].map(i=>uniq.length+i)).forEach((from,to)=>data.set(raw.subarray(from*gs,from*gs+gs),to*gs));
-  atlas={gw,gh,nR:uniq.length,data,seq:text?Uint16Array.from(chars.map(ch=>uniq.indexOf(ch))):null};atlasKey=key;
+  atlas={gw,gh,nR:uniq.length,data,seq:text?Uint16Array.from(chars.map(ch=>uniq.indexOf(ch))):null};
+  Object.assign(atlas,shapeInfo(uniq,order,gw,gh,font));atlasKey=key;
 }
 
 /* ---------- source ---------- */
@@ -978,7 +1019,8 @@ const LOOKS=[
     ['Terminal ASCII',{gridH:900,engine:'ascii',aSet:'standard',aFont:'JetBrains Mono',aSize:12,mode:'tonal',tones:tm('Phosphor')}],
     ['Edge ASCII',{gridH:900,engine:'ascii',aSet:'standard',aFont:'IBM Plex Mono',aSize:12,aEdges:80,mode:'tonal',tones:tm('Ember')}],
     ['Block shade',{gridH:800,engine:'ascii',aSet:'blocks',aFont:'JetBrains Mono',aSize:10,mode:'grade',palette:pl('Fantasy console 16'),sat:30}],
-    ['Typewriter',{gridH:900,engine:'ascii',aSet:'dense',aFont:'Courier Prime',aSize:11,mode:'tonal',tones:tm('Black on paper'),fGrain:8}]]]
+    ['Typewriter',{gridH:900,engine:'ascii',aSet:'dense',aFont:'Courier Prime',aSize:11,mode:'tonal',tones:tm('Black on paper'),fGrain:8}],
+    ['Shape ASCII',{gridH:900,engine:'ascii',aPick:'shape',aSet:'full',aFont:'JetBrains Mono',aSize:12,aContrast:50,lvB:77,lvW:235,mode:'tonal',tones:tm('Bone on black')}]]]
 ];
 
 /* ---------- recipes, presets ---------- */
@@ -987,7 +1029,7 @@ const readSaved=()=>{try{return JSON.parse(localStorage.getItem(STORE)||'[]');}c
 const writeSaved=a=>{try{localStorage.setItem(STORE,JSON.stringify(a));return true;}catch(e){return false;}};
 const recipe=()=>{const {view,zoom,...r}=S;return Object.assign({app:'dither-bench',version:4},clone(r));};
 const ENUM={engine:['dither','halftone','ascii'],mode:['tonal','grade','rgb','cmyk'],algo:ALGOS.map(a=>a[0]),hShape:HSHAPES.map(a=>a[0]),resample:['nearest','bilinear','smooth','area','lines'],
-  aMode:['ramp','text'],aSet:[...Object.keys(ASCII_SETS),'custom'],aFont:FONTS,fileScale:['print','1','2','4','8']};
+  aMode:['ramp','text'],aPick:['density','shape'],aSet:[...Object.keys(ASCII_SETS),'custom'],aFont:FONTS,fileScale:['print','1','2','4','8']};
 function applyRecipe(r){
   if(!r||typeof r!=='object')throw new Error('That isn’t a recipe object.');
   for(const k of Object.keys(DEFAULT)){
@@ -1187,7 +1229,9 @@ note(sec.engine,()=>{const g=gridDims();return `≈ ${(S.printDpi*g.w/src.width/
 slider(sec.engine,'hAngle','Angle',0,180,0.5,{when:()=>canRotate()&&indexed(),tip:'45° hides the screen best; 0°, 15° and 75° are the other traditional ink angles.'});
 {const a=()=>S.engine==='ascii';
   seg(sec.engine,'aMode','Fill',[['ramp','Density ramp'],['text','Your text']],{when:a,tip:'Ramp picks a character by tone. Your text runs a phrase across the image and varies its weight.'});
-  select(sec.engine,'aSet','Characters',[['standard','Standard'],['dense','Dense (70 levels)'],['blocks','Blocks ░▒▓█'],['digits','Digits'],['binary','Binary'],['dots','Dots'],['slashes','Slashes'],['glyphs','Glyphs'],['letters','Numerals'],['custom','Custom…']],{when:()=>a()&&S.aMode==='ramp'});
+  seg(sec.engine,'aPick','Characters by',[['density','Darkness'],['shape','Shape']],{when:()=>a()&&S.aMode==='ramp',tip:'Darkness picks each character by how much ink it has. Shape picks the character whose form matches that spot of the picture, so letters trace edges and features. Shape works best with Full ASCII.'});
+  slider(sec.engine,'aContrast','Edge contrast',0,100,1,{when:()=>a()&&S.aMode==='ramp'&&S.aPick==='shape',tip:'How hard Shape sharpens borders between light and dark areas. Higher is crisper and sparser.'});
+  select(sec.engine,'aSet','Characters',[['full','Full ASCII (95)'],['standard','Standard'],['dense','Dense (70 levels)'],['blocks','Blocks ░▒▓█'],['digits','Digits'],['binary','Binary'],['dots','Dots'],['slashes','Slashes'],['glyphs','Glyphs'],['letters','Numerals'],['custom','Custom…']],{when:()=>a()&&S.aMode==='ramp'});
   text(sec.engine,'aChars','Your characters',{when:()=>a()&&S.aMode==='ramp'&&S.aSet==='custom',max:60});
   text(sec.engine,'aText','Text',{when:()=>a()&&S.aMode==='text',max:200});
   select(sec.engine,'aFont','Font',FONTS.map(f=>[f,f]),{when:a});

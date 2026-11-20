@@ -31,3 +31,10 @@ The algorithms themselves are from:
 
 - Victor Ostromoukhov, "A Simple and Efficient Error-Diffusion Algorithm", SIGGRAPH 2001.
 - Bingfeng Zhou and Xifeng Fang, "Improving Mid-tone Quality of Variable-Coefficient Error Diffusion Using Threshold Modulation", SIGGRAPH 2003.
+
+## Methods
+
+The ASCII "Shape" mode (6 sampling circles per character cell, nearest-shape glyph matching, and global plus directional
+contrast enhancement) follows the method described by Alex Harri in
+["ASCII characters are not pixels: a deep dive into ASCII rendering"](https://alexharri.com/blog/ascii-rendering) (2026).
+The implementation here is original; no code was copied.

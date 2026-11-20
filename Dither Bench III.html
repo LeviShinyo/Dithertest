@@ -106,9 +106,21 @@ details.sec>summary .sum{margin-left:auto;font-family:var(--mono);font-weight:40
 .tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(60px,1fr));gap:6px}
 .tile{display:flex;flex-direction:column;padding:0;border:1px solid var(--line);border-radius:5px;background:var(--field);cursor:pointer;overflow:hidden;color:var(--muted);font:inherit}
 .tile canvas{display:block;width:100%;aspect-ratio:1;image-rendering:pixelated}
-.tile span{font-size:.66rem;line-height:1.15;padding:4px 3px 5px;text-align:center;min-height:2.6em;display:flex;align-items:center;justify-content:center}
+.tile span{font-size:.66rem;line-height:1.15;padding:4px 3px 5px;text-align:center;min-height:2.6em;display:flex;align-items:center;justify-content:center;overflow-wrap:anywhere}
 .tile:hover{border-color:var(--line-2);color:var(--fg)}
 .tile[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent);color:var(--accent)}
+.looks{display:grid;grid-template-columns:repeat(auto-fill,minmax(76px,1fr));gap:6px}
+.look{display:flex;flex-direction:column;padding:0;border:1px solid var(--line);border-radius:5px;background:var(--field);cursor:pointer;overflow:hidden;color:var(--muted);font:inherit;text-align:left}
+.look canvas{display:block;width:100%;aspect-ratio:1;object-fit:cover;background:var(--stage)}
+.look .lname{display:flex;gap:5px;align-items:flex-start;font-size:.66rem;line-height:1.15;padding:4px 5px 5px;min-height:2.75em}
+.look .dots{flex:none;margin-top:1px}.look .dots i{width:5px;height:9px}
+.look:hover{border-color:var(--line-2);color:var(--fg)}
+.look[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent);color:var(--accent)}
+.tgroup{font-size:.68rem;color:var(--muted);margin:4px 0 0 2px}
+.tiles.small{grid-template-columns:repeat(auto-fill,minmax(60px,1fr));gap:5px}
+.tiles.small .tile span{font-size:.6rem;padding:3px 2px 4px;min-height:2.5em}
+.tile .glyphs{display:flex;align-items:center;justify-content:center;height:40px;font-size:1rem;color:var(--fg);background:var(--field);border-bottom:1px solid var(--line);white-space:nowrap;overflow:hidden;letter-spacing:.04em}
+.tiles.small .tile .glyphs{height:34px;font-size:.95rem}
 /* bar sliders: label box | track with amber fill and number | − + */
 .r.barrow{grid-template-columns:minmax(0,1fr)}
 .r.barrow>.modb{top:18px}
@@ -691,7 +703,7 @@ function buildTile(){
   for(let i=0;i<N*N;i++){const g=tileMap[i]*255;im.data.set([g,g,g,255],i*4);}px.putImageData(im,0,0);
 }
 let atlas=null,atlasKey='';
-const asciiChars=()=>S.aMode==='text'?(S.aText||'DITHER '):(S.aSet==='custom'?' '+(S.aChars||'.:*#'):ASCII_SETS[S.aSet]||ASCII_SETS.standard);
+const asciiChars=(st=S)=>st.aMode==='text'?(st.aText||'DITHER '):(st.aSet==='custom'?' '+(st.aChars||'.:*#'):ASCII_SETS[st.aSet]||ASCII_SETS.standard);
 const wantAtlasKey=()=>[S.aFont,S.aSize,S.aMode,asciiChars()].join('|');
 /* Shape-matching geometry. Circle centres are fractions of the cell; radius is 0.3 x cell width.
    AFFECT lists which outside circles can boost each inside circle's contrast. */
@@ -713,8 +725,11 @@ function shapeInfo(uniq,order,gw,gh,font){
 }
 async function ensureAtlas(){
   const key=wantAtlasKey();if(key===atlasKey)return;
-  const text=S.aMode==='text',chars=[...asciiChars()],uniq=[...new Set(chars)],all=uniq.concat(['|','/','-','\\']);
-  const gh=S.aSize,gw=Math.max(3,Math.round(gh*0.62)),gs=gw*gh,font=`${Math.max(4,Math.round(gh*0.95))}px "${S.aFont}", ui-monospace, monospace`;
+  atlas=await makeAtlas(S);atlasKey=key;
+}
+async function makeAtlas(st){
+  const text=st.aMode==='text',chars=[...asciiChars(st)],uniq=[...new Set(chars)],all=uniq.concat(['|','/','-','\\']);
+  const gh=st.aSize,gw=Math.max(3,Math.round(gh*0.62)),gs=gw*gh,font=`${Math.max(4,Math.round(gh*0.95))}px "${st.aFont}", ui-monospace, monospace`;
   try{await document.fonts.load(font,all.join(''));}catch(e){}
   const c=document.createElement('canvas');c.width=gw;c.height=gh*all.length;const x=c.getContext('2d',{willReadFrequently:true});
   x.fillStyle='#000';x.fillRect(0,0,c.width,c.height);x.fillStyle='#fff';x.font=font;x.textAlign='center';x.textBaseline='middle';
@@ -723,8 +738,8 @@ async function ensureAtlas(){
   const cov=all.map((_,k)=>{let t=0;for(let i=0;i<gs;i++)t+=raw[k*gs+i];return t;});
   let order=uniq.map((_,i)=>i);if(!text)order.sort((a,b)=>cov[a]-cov[b]);
   const data=new Uint8Array(raw.length);order.concat([0,1,2,3].map(i=>uniq.length+i)).forEach((from,to)=>data.set(raw.subarray(from*gs,from*gs+gs),to*gs));
-  atlas={gw,gh,nR:uniq.length,data,seq:text?Uint16Array.from(chars.map(ch=>uniq.indexOf(ch))):null};
-  Object.assign(atlas,shapeInfo(uniq,order,gw,gh,font));atlasKey=key;
+  const at={gw,gh,nR:uniq.length,data,seq:text?Uint16Array.from(chars.map(ch=>uniq.indexOf(ch))):null};
+  return Object.assign(at,shapeInfo(uniq,order,gw,gh,font));
 }
 
 /* ---------- source ---------- */
@@ -831,7 +846,7 @@ function paint(r,job){
   last={w,h,map:r.map,scale:job.scale,dpiEff:job.dpiEff,capped:job.capped,ms:r.ms,colors:r.colors,
     plates:r.plates.map(p=>Object.assign({},p,{test:p.kind==='eq'?(v=>v===p.k):(v=>(v>>p.k)&1)}))};
   $('#stage').classList.toggle('checker',job.s.transparent);
-  drawHist(r.hist,job.s);applyZoom();notes();syncFileHint();
+  drawHist(r.hist,job.s);applyZoom();notes();syncFileHint();refreshLookThumbs();
   if(S.view==='plates')renderPlates();
 }
 function updateStat(){
@@ -1148,12 +1163,20 @@ function thumb(over){
   const r=thumbEngine.render({id:0,key:'thumb'+(++thumbN),w:N,h:N,s,data:d,custom:false});
   const c=el('canvas');c.width=c.height=N;if(r.rgba)c.getContext('2d').putImageData(new ImageData(r.rgba,N,N),0,0);return c;
 }
+/* o.thumb(val) draws an option's preview (default: a halftone swatch); opts may be [{group,items}] for labelled groups;
+   o.small packs more tiles per row. */
 function tiles(p,k,label,opts,o={}){
-  const {r,v}=row(p,label,o,[k]);r.classList.add('stack');const g=el('div','tiles');g.setAttribute('role','group');g.setAttribute('aria-label',label);
-  const bs=opts.map(([val,txt])=>{const b=el('button','tile');b.type='button';b.id=`c-${k}-${val}`;b.title=txt;
-    b.append(thumb({engine:'halftone',[k]:val}),el('span','',txt));b.onclick=()=>{S[k]=val;changed(o);};g.appendChild(b);return [val,b];});
-  v.appendChild(g);ctl.push({r,when:o.when,sync(){bs.forEach(([val,b])=>b.setAttribute('aria-pressed',S[k]===val));}});
+  const {r,v}=row(p,label,o,[k]);r.classList.add('stack');const bs=[],cls='tiles'+(o.small?' small':'');
+  const mk=(val,txt)=>{const b=el('button','tile');b.type='button';b.id=`c-${k}-${val}`;b.title=txt;
+    b.append(o.thumb?o.thumb(val):thumb({engine:'halftone',[k]:val}),el('span','',(o.short&&o.short[val])||txt.replace(/\s*\(.*\)$/,'').replace(/…$/,'')));b.onclick=()=>{S[k]=val;changed(o);};bs.push([val,b]);return b;};
+  const grid=(name,items)=>{const g=el('div',cls);g.setAttribute('role','group');g.setAttribute('aria-label',name);items.forEach(([val,txt])=>g.appendChild(mk(val,txt)));return g;};
+  if(opts[0]&&opts[0].group)opts.forEach(gp=>{v.appendChild(el('div','tgroup',gp.group));v.appendChild(grid(gp.group,gp.items));});
+  else v.appendChild(grid(label,opts));
+  ctl.push({r,when:o.when,sync(){bs.forEach(([val,b])=>b.setAttribute('aria-pressed',S[k]===val));}});
 }
+const glyphPreview=(txt,font)=>{const d=el('div','glyphs',txt);if(font)d.style.fontFamily=`"${font}", ui-monospace, monospace`;return d;};
+const setPreview=v=>{if(v==='custom')return glyphPreview('a b c');const c=[...(ASCII_SETS[v]||'')].filter(ch=>ch!==' ');
+  const n=Math.min(6,c.length);return glyphPreview(Array.from({length:n},(_,i)=>c[Math.round(i*(c.length-1)/Math.max(1,n-1))]).join(''),'JetBrains Mono');};
 function select(p,k,label,opts,o={}){
   const {r,l,v}=row(p,label,o,[k]),s=el('select');s.id='c-'+k;l.htmlFor=s.id;
   const add=(par,[val,txt])=>{const op=el('option','',txt);op.value=val;par.appendChild(op);};
@@ -1186,6 +1209,7 @@ function extraSums(){
   const list=(a,none)=>a.length?a.slice(0,3).join(' · ')+(a.length>3?` +${a.length-3}`:''):none;
   const edited=BASE&&Object.keys(DEFAULT).some(differs);
   $('#sum-looks').textContent=BASE?BASENAME+(edited?' · edited':''):'';
+  lookTiles.forEach(t=>t.b.setAttribute('aria-pressed',!!BASE&&BASENAME===t.name));
   const sh=[];if(S.lvB!==0||S.lvW!==255||S.lvP!==0.5)sh.push('levels');if(S.contrast)sh.push('contrast '+S.contrast);if(S.sat&&S.mode!=='tonal')sh.push('saturation '+S.sat);
   if(S.sharpAmt)sh.push('sharpen '+S.sharpAmt);if(S.blur)sh.push('blur '+S.blur);if(S.noise)sh.push(S.noise<0?'denoise':'grain');if(S.edges)sh.push('outlines');if(S.invert)sh.push('inverted');
   $('#sum-shape').textContent=list(sh,'untouched');
@@ -1199,9 +1223,32 @@ function chip(name,cols,fn){const b=el('button','chip');b.type='button';if(cols)
   b.appendChild(document.createTextNode(name));b.onclick=fn;return b;}
 
 /* ---------- Looks ---------- */
-LOOKS.forEach(([grp,items])=>{sec.looks.appendChild(el('div','sub',grp));const c=el('div','chips');
+/* Each Look is a tile with a small picture of the current image in that Look. Pictures are drawn one at a time, in the
+   background, when the drawer is open, and again whenever a new image is loaded. They are drawn at a reduced grid (at
+   most 240 cells tall, with sizes measured in cells scaled to match), so they show palette, contrast and texture
+   rather than every cell. */
+const lookTiles=[];
+LOOKS.forEach(([grp,items])=>{sec.looks.appendChild(el('div','sub',grp));const c=el('div','looks');
   items.forEach(([name,r])=>{const cols=r.mode==='tonal'?[r.tones.bg,...r.tones.inks.map(i=>i.c)]:r.mode==='grade'?r.palette.slice(0,6):r.mode==='cmyk'?['#00aeef','#ec008c','#fff200','#231f20']:['#ff0000','#00ff00','#0000ff'];
-    c.appendChild(chip(name,cols,()=>applyLook(r)));});sec.looks.appendChild(c);});
+    const b=el('button','look'),cv=el('canvas'),nm=el('span','lname'),d=el('span','dots');b.type='button';b.title=name;cv.width=cv.height=1;
+    cols.forEach(col=>{const i=el('i');i.style.background=col;d.appendChild(i);});nm.append(d,document.createTextNode(name));b.append(cv,nm);
+    b.onclick=()=>applyLook(r);c.appendChild(b);lookTiles.push({name,r,cv,b});});
+  sec.looks.appendChild(c);});
+let lookVer=-1,lookJob=0;
+function refreshLookThumbs(){
+  if(!sec.looks.parentElement.open||lookVer===srcVersion||src.width<2)return;lookVer=srcVersion;const job=++lookJob;let i=0;
+  const step=async()=>{if(job!==lookJob||i>=lookTiles.length)return;try{await drawLookThumb(lookTiles[i]);}catch(e){}i++;setTimeout(step,0);};step();
+}
+async function drawLookThumb({r,cv}){
+  const st=Object.assign(clone(DEFAULT),clone(r)),H=Math.min(st.gridH,240),k=H/st.gridH,W=Math.max(1,Math.round(src.width*H/src.height));
+  // shrink sizes measured in cells along with the grid, but never below what still reads as that pattern
+  st.gridH=H;st.hSize=Math.max(Math.min(st.hSize,3),st.hSize*k);st.mPeriod=Math.max(Math.min(st.mPeriod,4),st.mPeriod*k);st.aSize=Math.max(Math.min(st.aSize,6),Math.round(st.aSize*k));st.fMisreg=Math.round(st.fMisreg*k);
+  const c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d',{willReadFrequently:true});x.imageSmoothingQuality='high';x.drawImage(src,0,0,W,H);
+  const glyphs=st.engine==='ascii'?await makeAtlas(st):null;
+  thumbEngine=thumbEngine||ENGINE();const res=thumbEngine.render({id:0,key:'look'+(++thumbN),w:W,h:H,s:st,data:x.getImageData(0,0,W,H).data,custom:false,glyphs});
+  if(res.rgba){cv.width=W;cv.height=H;cv.getContext('2d').putImageData(new ImageData(res.rgba,W,H),0,0);}
+}
+sec.looks.parentElement.addEventListener('toggle',refreshLookThumbs);
 
 /* ---------- Canvas ---------- */
 slider(sec.canvas,'gridH','Grid height',16,2400,1,{log:true,tip:'How many cells tall the result is. Fewer cells is chunkier.',after:clearExports});
@@ -1211,8 +1258,8 @@ slider(sec.canvas,'lineKeep','Line keep',0,100,1,{when:()=>S.resample==='lines'}
 
 /* ---------- Engine ---------- */
 seg(sec.engine,'engine','',[['dither','Dither'],['halftone','Halftone'],['ascii','ASCII']],{big:true});
-select(sec.engine,'algo','Algorithm',[{group:'Error diffusion',items:DIFFUSION},{group:'Ordered',items:ORDERED},{group:'Pattern',items:PATTERN},{group:'Modulation',items:MODUL},{group:'No dither',items:[['none','Threshold only']]}],
-  {when:()=>S.engine==='dither',after:()=>{if(S.algo==='custom')buildTile();}});
+tiles(sec.engine,'algo','Algorithm',[{group:'Error diffusion',items:DIFFUSION},{group:'Ordered',items:ORDERED},{group:'Pattern',items:PATTERN},{group:'Modulation',items:MODUL},{group:'No dither',items:[['none','Threshold only']]}],
+  {when:()=>S.engine==='dither',after:()=>{if(S.algo==='custom')buildTile();},small:true,short:{ostro:'Ostro\u00admoukhov'},thumb:v=>thumb({engine:'dither',algo:v})});
 seg(sec.engine,'serp','Scan',[[true,'Serpentine'],[false,'Straight']],{when:isDiff});
 slider(sec.engine,'breakup','Texture breakup',0,100,1,{when:isDiff,tip:'Nudges the pattern with fine noise so smooth areas like skin and sky don’t form wavy, worm-like streaks.'});
 slider(sec.engine,'patScale','Pattern scale',1,8,1,{when:isTile,tip:'Blows the pattern up by a whole number of cells.'});
@@ -1231,10 +1278,10 @@ slider(sec.engine,'hAngle','Angle',0,180,0.5,{when:()=>canRotate()&&indexed(),ti
   seg(sec.engine,'aMode','Fill',[['ramp','Density ramp'],['text','Your text']],{when:a,tip:'Ramp picks a character by tone. Your text runs a phrase across the image and varies its weight.'});
   seg(sec.engine,'aPick','Characters by',[['density','Darkness'],['shape','Shape']],{when:()=>a()&&S.aMode==='ramp',tip:'Darkness picks each character by how much ink it has. Shape picks the character whose form matches that spot of the picture, so letters trace edges and features. Shape works best with Full ASCII.'});
   slider(sec.engine,'aContrast','Edge contrast',0,100,1,{when:()=>a()&&S.aMode==='ramp'&&S.aPick==='shape',tip:'How hard Shape sharpens borders between light and dark areas. Higher is crisper and sparser.'});
-  select(sec.engine,'aSet','Characters',[['full','Full ASCII (95)'],['standard','Standard'],['dense','Dense (70 levels)'],['blocks','Blocks ░▒▓█'],['digits','Digits'],['binary','Binary'],['dots','Dots'],['slashes','Slashes'],['glyphs','Glyphs'],['letters','Numerals'],['custom','Custom…']],{when:()=>a()&&S.aMode==='ramp'});
+  tiles(sec.engine,'aSet','Characters',[['full','Full ASCII (95)'],['standard','Standard'],['dense','Dense (70 levels)'],['blocks','Blocks'],['digits','Digits'],['binary','Binary'],['dots','Dots'],['slashes','Slashes'],['glyphs','Glyphs'],['letters','Numerals'],['custom','Custom…']],{when:()=>a()&&S.aMode==='ramp',thumb:setPreview});
   text(sec.engine,'aChars','Your characters',{when:()=>a()&&S.aMode==='ramp'&&S.aSet==='custom',max:60});
   text(sec.engine,'aText','Text',{when:()=>a()&&S.aMode==='text',max:200});
-  select(sec.engine,'aFont','Font',FONTS.map(f=>[f,f]),{when:a});
+  tiles(sec.engine,'aFont','Font',FONTS.map(f=>[f,f]),{when:a,small:true,short:{UnifrakturCook:'Unifraktur Cook'},thumb:f=>glyphPreview('Ag#',f)});
   slider(sec.engine,'aSize','Glyph size',5,40,1,{when:a,tip:'Character height in cells. Raise Grid height for more rows of text.'});
   slider(sec.engine,'aWeight','Weight',0,100,1,{when:a});
   slider(sec.engine,'aEdges','Edges',0,100,1,{when:a,tip:'Draws outlines with | / - \\ where the image has edges.'});
